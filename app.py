@@ -1,13 +1,14 @@
-#!/usr/bin/env python3
+import os
+import io
 from flask import Flask, request, send_file, jsonify
+import logging
 from tools import cint, ltc_encode
 from timecode import Timecode
-import numpy as np
-from scipy.io import wavfile
-import io
-import time
 
 app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 class MyByteArray:
     def __init__(self, size):
@@ -18,54 +19,53 @@ class MyByteArray:
         self.buffer[self.cursor] = byte
         self.cursor += 1
 
-def write_wave_file(file_name, data, rate=48000, bits=8):
+def write_wave_file(data, rate=48000, bits=8):
     header = gen_wave_header(data, rate=rate, bits=bits)
-    with open(file_name, 'wb') as f:
-        f.write(header)
-        f.write(data)
+    return header + data
 
 def gen_wave_header(data, rate=48000, bits=8, channels=1):
-    header_length = 44  # fixed header length
+    header_length = 4+4+4+4+4+2+2+4+4+2+2+4+4
     data_length = len(data)
     file_length = header_length + data_length
-    header = b'RIFF'                              # ascii RIFF
-    header += cint(file_length, 4)                # file size data
-    header += b'WAVE'                             # ascii WAVE
-    header += b'fmt '                             # includes trailing space
-    header += cint(16, 4)                         # length of format data (16)
-    header += cint(1, 2)                          # type of format (1 is PCM)
-    header += cint(channels, 2)                   # number of channels
-    header += cint(rate, 4)                       # sample rate
-    header += cint(rate * bits * channels / 8, 4) # byte rate
-    header += cint(bits * channels / 8, 2)        # block align
-    header += cint(bits, 2)                       # bits per sample
-    header += b'data'                             # marks the beginning of the data section
-    header += cint(data_length, 4)                # size of the data section
+    header = b''
+    header += b'RIFF'
+    header += cint(file_length, 4)
+    header += b'WAVE'
+    header += b'fmt '
+    header += cint(16, 4)
+    header += cint(1, 2)
+    header += cint(channels, 2)
+    header += cint(rate, 4)
+    header += cint(rate * bits * channels // 8, 4)
+    header += cint(bits * channels // 8, 2)
+    header += cint(bits, 2)
+    header += b'data'
+    header += cint(data_length, 4)
     return header
 
-@app.route('/generate_ltc', methods=['POST'])
-def generate_ltc():
-    data = request.json
-    fps = float(data['frameRate'])
-    start_time = data['startTime']
-    duration = int(data['duration']) * 60  # Convert to seconds
-    rate = int(data['sampleRate'])
-    bits = int(data['bitDepth'])
+def make_ltc_wave(fps, start, duration, rate, bits):
+    fps = float(fps)
+    duration = float(duration)
 
-    on_val = 255 if bits == 8 else 32767
-    off_val = 0 if bits == 8 else -32768
+    on_val = 255
+    off_val = 0
+    if bits == 16:
+        on_val = 32767  # Valor máximo para 16 bits
+        off_val = -32768  # Valor mínimo para 16 bits
+    elif bits == 8:
+        on_val = 255  # Valor máximo para 8 bits
+        off_val = 0  # Valor mínimo para 8 bits
+    elif bits == 32:
+        on_val = 1.0  # Máximo para flotantes
+        off_val = 0.0
 
     total_samples = int(rate * duration)
     bytes_per_sample = bits // 8
     total_bytes = total_samples * bytes_per_sample
 
-    tc = Timecode(fps, start_time)
-    tc_encoded = []
-    for i in range(int(duration * fps) + 1):
-        e = ltc_encode(tc, as_string=True)
-        tc_encoded.append(e)
-        tc.next()
-    
+    # Generación de la codificación LTC (ya tienes este código)
+    tc = Timecode(fps, start)
+    tc_encoded = [ltc_encode(tc, as_string=True) for _ in range(int(duration * fps) + 1)]
     tc_encoded = ''.join(tc_encoded)
 
     double_pulse_data = ''
@@ -77,27 +77,54 @@ def generate_ltc():
         else:
             double_pulse_data += '10' if next_is_up else '01'
 
+    # Creación del buffer de datos de audio
     data = MyByteArray(total_bytes)
     for sample_num in range(total_samples):
         ratio = sample_num / total_samples
-        dpp_intpart = int(len(double_pulse_data) * ratio)
+        double_pulse_position = len(double_pulse_data) * ratio
+        dpp_intpart = int(double_pulse_position)
         this_val = int(double_pulse_data[dpp_intpart])
 
         sample = on_val if this_val == 1 else off_val
+
+        # RIFF wav usa little-endian
         sample_bytes = sample.to_bytes(bytes_per_sample, 'little', signed=bits > 8)
         for byte in sample_bytes:
             data.add(byte)
-        # Simulate processing time to see the progress bar working
-        time.sleep(0.001)
 
-    wave_file_name = 'ltc_generated.wav'
-    write_wave_file(wave_file_name, data.buffer, rate=rate, bits=bits)
+    wav_data = write_wave_file(data.buffer, rate=rate, bits=bits)
+    return wav_data
 
-    byte_io = io.BytesIO()
-    byte_io.write(data.buffer)
-    byte_io.seek(0)
 
-    return send_file(byte_io, as_attachment=True, download_name=wave_file_name, mimetype='audio/wav')
+@app.route('/generate_ltc', methods=['POST'])
+def generate_ltc():
+    try:
+        data = request.get_json()
+
+        frame_rate = float(data.get('frameRate', 30))
+        sample_rate = int(data.get('sampleRate', 44100))
+        bit_depth = int(data.get('bitDepth', 16))
+        duration = int(data.get('duration', 10)) * 60  # Convertir minutos a segundos
+        start_time = data.get('startTime', '00:01:00:00')
+
+        logging.info(f"Generating LTC with Frame Rate: {frame_rate}, Sample Rate: {sample_rate}, "
+                     f"Bit Depth: {bit_depth}, Duration: {duration} seconds, Start Time: {start_time}")
+
+        # Generar archivo LTC .wav en memoria
+        wav_data = make_ltc_wave(frame_rate, start_time, duration, sample_rate, bit_depth)
+
+        # Devolver el archivo generado como descarga .wav
+        return send_file(
+            io.BytesIO(wav_data),
+            mimetype='audio/wav',
+            as_attachment=True,
+            download_name='ltc_generated.wav'
+        )
+
+    except Exception as e:
+        logging.error(f"Error during LTC generation: {str(e)}")
+        return jsonify({'error': 'Failed to generate LTC. Please check input parameters.'}), 500
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
