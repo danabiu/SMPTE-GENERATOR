@@ -22,14 +22,6 @@
                         <span>25</span>
                     </label>
                     <label>
-                        <input name="frameRate" type="radio" value="23.976" />
-                        <span>23.976</span>
-                    </label>
-                    <label>
-                        <input name="frameRate" type="radio" value="29.97ndf" />
-                        <span>29.97ndf</span>
-                    </label>
-                    <label>
                         <input name="frameRate" type="radio" value="30" checked/>
                         <span>30</span>
                     </label>
@@ -71,13 +63,14 @@
             <div class="section">
                 <label>Duration (minutes)</label>
                 <p class="range-field">
-                    <input type="range" name="duration" min="1" max="60" value="10"/>
+                    <input type="range" name="duration" min="1" max="120" value="10" id="durationRange"/>
+                    <span id="durationDisplay">10</span> minutes
                 </p>
             </div>
 
             <div class="section">
                 <label>Start Time (HH:MM:SS:FF)</label>
-                <input type="text" name="startTime" value="02:10:00:00" />
+                <input type="text" name="startTime" value="00:01:00:00" />
             </div>
 
             <button class="btn waves-effect waves-light" type="submit" name="action">Generate LTC</button>
@@ -85,6 +78,10 @@
     </div>
 
     <script>
+        document.getElementById('durationRange').addEventListener('input', function() {
+            document.getElementById('durationDisplay').textContent = this.value;
+        });
+
         document.getElementById('ltcForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -103,7 +100,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'ltc.wav';
+                a.download = 'ltc_generated.wav';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
