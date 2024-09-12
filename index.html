@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMPTE LTC Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+</head>
+<body>
+    <div class="container">
+        <h3>El-Tee-See Two: SMPTE LTC .wav file generator</h3>
+        <form id="ltcForm">
+            <div class="section">
+                <label>Frame Rate</label>
+                <p>
+                    <label>
+                        <input name="frameRate" type="radio" value="24" />
+                        <span>24</span>
+                    </label>
+                    <label>
+                        <input name="frameRate" type="radio" value="25" />
+                        <span>25</span>
+                    </label>
+                    <label>
+                        <input name="frameRate" type="radio" value="23.976" />
+                        <span>23.976</span>
+                    </label>
+                    <label>
+                        <input name="frameRate" type="radio" value="29.97ndf" />
+                        <span>29.97ndf</span>
+                    </label>
+                    <label>
+                        <input name="frameRate" type="radio" value="30" checked/>
+                        <span>30</span>
+                    </label>
+                </p>
+            </div>
+
+            <div class="section">
+                <label>Sample Rate</label>
+                <p>
+                    <label>
+                        <input name="sampleRate" type="radio" value="44100" checked/>
+                        <span>44100</span>
+                    </label>
+                    <label>
+                        <input name="sampleRate" type="radio" value="48000" />
+                        <span>48000</span>
+                    </label>
+                </p>
+            </div>
+
+            <div class="section">
+                <label>Bit Depth</label>
+                <p>
+                    <label>
+                        <input name="bitDepth" type="radio" value="8" />
+                        <span>8 bit</span>
+                    </label>
+                    <label>
+                        <input name="bitDepth" type="radio" value="16" />
+                        <span>16 bit</span>
+                    </label>
+                    <label>
+                        <input name="bitDepth" type="radio" value="24" checked/>
+                        <span>24 bit</span>
+                    </label>
+                </p>
+            </div>
+
+            <div class="section">
+                <label>Duration (minutes)</label>
+                <p class="range-field">
+                    <input type="range" name="duration" min="1" max="60" value="10"/>
+                </p>
+            </div>
+
+            <div class="section">
+                <label>Start Time (HH:MM:SS:FF)</label>
+                <input type="text" name="startTime" value="02:10:00:00" />
+            </div>
+
+            <button class="btn waves-effect waves-light" type="submit" name="action">Generate LTC</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('ltcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('/generate_ltc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'ltc.wav';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+</html>
