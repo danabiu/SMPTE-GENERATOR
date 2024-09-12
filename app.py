@@ -5,6 +5,7 @@ from timecode import Timecode
 import numpy as np
 from scipy.io import wavfile
 import io
+import time
 
 app = Flask(__name__)
 
@@ -86,6 +87,8 @@ def generate_ltc():
         sample_bytes = sample.to_bytes(bytes_per_sample, 'little', signed=bits > 8)
         for byte in sample_bytes:
             data.add(byte)
+        # Simulate processing time to see the progress bar working
+        time.sleep(0.001)
 
     wave_file_name = 'ltc_generated.wav'
     write_wave_file(wave_file_name, data.buffer, rate=rate, bits=bits)

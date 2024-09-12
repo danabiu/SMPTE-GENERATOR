@@ -1,102 +1,169 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generación de Archivo TMC</title>
+    <title>SMPTE LTC Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #333; /* Fondo gris oscuro */
-            color: #FFF;
-            text-align: center;
-            padding: 20px;
+            background-color: #333; /* Gris oscuro */
+            color: #fff;
         }
-
-        #progressContainer {
-            width: 100%;
-            background-color: #555;
-            border-radius: 5px;
-            margin-top: 20px;
-            display: none;
+        .btn-custom {
+            background-color: #FF5001 !important; /* Color naranja personalizado */
         }
-
-        #progressBar {
-            width: 0%;
-            height: 30px;
-            background-color: #FF5001;
-            border-radius: 5px;
-            text-align: center;
-            color: white;
-            line-height: 30px;
+        .progress {
+            background-color: #555 !important; /* Color gris oscuro para la barra */
         }
-
-        #downloadPopup {
-            display: none;
-            background-color: #333; /* Fondo gris oscuro */
-            color: #FFF;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-
-        button {
-            background-color: #FF5001;
-            color: #FFF;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #ff7f33;
+        .progress .determinate {
+            background-color: #FF5001 !important; /* Color naranja para la barra de progreso */
         }
     </style>
 </head>
 <body>
-    <h1>Generación de Archivo TMC</h1>
-    <button onclick="generarArchivo()">Generar Archivo</button>
+    <div class="container">
+        <h3>El-Tee-See Two: SMPTE LTC .wav file generator</h3>
+        <form id="ltcForm">
+            <div class="section">
+                <label>Frame Rate</label>
+                <p>
+                    <label>
+                        <input name="frameRate" type="radio" value="24" />
+                        <span>24</span>
+                    </label>
+                    <label>
+                        <input name="frameRate" type="radio" value="25" />
+                        <span>25</span>
+                    </label>
+                    <label>
+                        <input name="frameRate" type="radio" value="30" checked/>
+                        <span>30</span>
+                    </label>
+                </p>
+            </div>
 
-    <!-- Barra de progreso -->
-    <div id="progressContainer">
-        <div id="progressBar">0%</div>
+            <div class="section">
+                <label>Sample Rate</label>
+                <p>
+                    <label>
+                        <input name="sampleRate" type="radio" value="44100" checked/>
+                        <span>44100</span>
+                    </label>
+                    <label>
+                        <input name="sampleRate" type="radio" value="48000" />
+                        <span>48000</span>
+                    </label>
+                </p>
+            </div>
+
+            <div class="section">
+                <label>Bit Depth</label>
+                <p>
+                    <label>
+                        <input name="bitDepth" type="radio" value="8" />
+                        <span>8 bit</span>
+                    </label>
+                    <label>
+                        <input name="bitDepth" type="radio" value="16" />
+                        <span>16 bit</span>
+                    </label>
+                    <label>
+                        <input name="bitDepth" type="radio" value="24" checked/>
+                        <span>24 bit</span>
+                    </label>
+                </p>
+            </div>
+
+            <div class="section">
+                <label>Duration (minutes)</label>
+                <p class="range-field">
+                    <input type="range" name="duration" min="1" max="120" value="10" id="durationRange"/>
+                    <span id="durationDisplay">10</span> minutes
+                </p>
+            </div>
+
+            <div class="section">
+                <label>Start Time (HH:MM:SS:FF)</label>
+                <input type="text" name="startTime" value="00:01:00:00" />
+            </div>
+
+            <button class="btn waves-effect waves-light btn-custom" type="submit" name="action" id="generateButton">Generate LTC</button>
+        </form>
+
+        <!-- Barra de progreso -->
+        <div class="progress" id="progressBar" style="display:none;">
+            <div class="determinate" style="width: 0%;" id="progressBarDeterminate"></div>
+        </div>
     </div>
 
-    <!-- Pop-up de descarga -->
-    <div id="downloadPopup">
-        <h2>Archivo generado</h2>
-        <button id="downloadButton">DESCARGAR</button>
+    <!-- Modal de descarga -->
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+            <h4>Archivo Listo</h4>
+            <p>El archivo SMPTE LTC ha sido generado.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-close waves-effect waves-light btn btn-custom" id="downloadButton">DESCARGAR</button>
+        </div>
     </div>
 
     <script>
-        function generarArchivo() {
+        document.getElementById('durationRange').addEventListener('input', function() {
+            document.getElementById('durationDisplay').textContent = this.value;
+        });
+
+        document.getElementById('ltcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
             // Mostrar barra de progreso
-            document.getElementById('progressContainer').style.display = 'block';
-            let progressBar = document.getElementById('progressBar');
-
-            // Simulación del progreso (sustituye esto con tu lógica de generación real)
-            let progreso = 0;
-            let intervalo = setInterval(function() {
-                if (progreso >= 100) {
-                    clearInterval(intervalo);
-                    // Ocultar barra de progreso
-                    document.getElementById('progressContainer').style.display = 'none';
-                    // Mostrar pop-up de descarga
-                    document.getElementById('downloadPopup').style.display = 'block';
+            document.getElementById('progressBar').style.display = 'block';
+            let progress = 0;
+            const progressBar = document.getElementById('progressBarDeterminate');
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress <= 100) {
+                    progressBar.style.width = progress + '%';
                 } else {
-                    progreso += 10;
-                    progressBar.style.width = progreso + '%';
-                    progressBar.innerText = progreso + '%';
+                    clearInterval(progressInterval);
                 }
-            }, 500); // Simula el progreso cada 500ms
+            }, 500);
 
-            // Una vez finalizado, habilita el botón de descarga
-            document.getElementById('downloadButton').onclick = function() {
-                // Lógica de descarga del archivo
-                window.location.href = 'ruta/del/archivo.tmc'; // Cambia por la ruta real del archivo
-            };
-        }
+            fetch('/generate_ltc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                clearInterval(progressInterval); // Detener barra de progreso
+                document.getElementById('progressBar').style.display = 'none';
+                progressBar.style.width = '0%'; // Resetear barra
+
+                // Mostrar modal con botón de descarga
+                const downloadButton = document.getElementById('downloadButton');
+                const url = window.URL.createObjectURL(blob);
+                downloadButton.onclick = function() {
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'ltc_generated.wav';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                };
+
+                const modal = document.getElementById('downloadModal');
+                const instance = M.Modal.init(modal);
+                instance.open();
+            });
+        });
     </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </body>
 </html>
