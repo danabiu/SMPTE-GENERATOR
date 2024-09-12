@@ -50,20 +50,26 @@ def make_ltc_wave(fps, start, duration, rate, bits):
     on_val = 255
     off_val = 0
     if bits == 16:
-        on_val = 32767  # Valor máximo para 16 bits
-        off_val = -32768  # Valor mínimo para 16 bits
+        if rate == 44100:
+            on_val = 32767 * 1.5  # Aumentar el valor máximo para 44100
+            off_val = -32768 * 1.5  # Aumentar el valor mínimo para 44100
+        else:
+            on_val = 32767  # Mantener el valor normal para 48000
+            off_val = -32768
     elif bits == 8:
-        on_val = 255  # Valor máximo para 8 bits
-        off_val = 0  # Valor mínimo para 8 bits
+        if rate == 44100:
+            on_val = 255 * 1.5  # Aumentar el valor máximo para 44100
+        else:
+            on_val = 255
+        off_val = 0
     elif bits == 32:
-        on_val = 1.0  # Máximo para flotantes
+        on_val = 1.0
         off_val = 0.0
 
     total_samples = int(rate * duration)
     bytes_per_sample = bits // 8
     total_bytes = total_samples * bytes_per_sample
 
-    # Generación de la codificación LTC (ya tienes este código)
     tc = Timecode(fps, start)
     tc_encoded = [ltc_encode(tc, as_string=True) for _ in range(int(duration * fps) + 1)]
     tc_encoded = ''.join(tc_encoded)
@@ -77,7 +83,6 @@ def make_ltc_wave(fps, start, duration, rate, bits):
         else:
             double_pulse_data += '10' if next_is_up else '01'
 
-    # Creación del buffer de datos de audio
     data = MyByteArray(total_bytes)
     for sample_num in range(total_samples):
         ratio = sample_num / total_samples
@@ -87,7 +92,6 @@ def make_ltc_wave(fps, start, duration, rate, bits):
 
         sample = on_val if this_val == 1 else off_val
 
-        # RIFF wav usa little-endian
         sample_bytes = sample.to_bytes(bytes_per_sample, 'little', signed=bits > 8)
         for byte in sample_bytes:
             data.add(byte)
