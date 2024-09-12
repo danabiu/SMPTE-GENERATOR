@@ -3,95 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generación de archivo</title>
+    <title>Generación de Archivo TMC</title>
     <style>
         body {
-            background-color: #2E2E2E; /* Gris oscuro */
-            color: white;
             font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
+            background-color: #333; /* Fondo gris oscuro */
+            color: #FFF;
             text-align: center;
+            padding: 20px;
         }
 
-        .progress-bar {
+        #progressContainer {
             width: 100%;
-            background-color: #4F4F4F; /* Fondo de la barra de progreso */
-            border-radius: 25px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            height: 30px;
-        }
-
-        .progress {
-            width: 0%;
-            height: 100%;
-            background-color: #FF5001; /* Color personalizado de la barra */
-            transition: width 0.4s;
-        }
-
-        .popup {
-            display: none;
-            background-color: #FF5001; /* Color personalizado del popup */
-            color: white;
-            padding: 15px;
+            background-color: #555;
             border-radius: 5px;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+            display: none;
         }
 
-        .popup a {
+        #progressBar {
+            width: 0%;
+            height: 30px;
+            background-color: #FF5001;
+            border-radius: 5px;
+            text-align: center;
             color: white;
-            text-decoration: none;
-            font-weight: bold;
+            line-height: 30px;
+        }
+
+        #downloadPopup {
+            display: none;
+            background-color: #333; /* Fondo gris oscuro */
+            color: #FFF;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            background-color: #FF5001;
+            color: #FFF;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ff7f33;
         }
     </style>
 </head>
 <body>
+    <h1>Generación de Archivo TMC</h1>
+    <button onclick="generarArchivo()">Generar Archivo</button>
 
-    <div class="container">
-        <h1>Generando el archivo...</h1>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
-        </div>
-        <div id="popup" class="popup">
-            ¡Archivo generado! <a href="#" id="download-link">DESCARGAR</a>
-        </div>
+    <!-- Barra de progreso -->
+    <div id="progressContainer">
+        <div id="progressBar">0%</div>
+    </div>
+
+    <!-- Pop-up de descarga -->
+    <div id="downloadPopup">
+        <h2>Archivo generado</h2>
+        <button id="downloadButton">DESCARGAR</button>
     </div>
 
     <script>
-        function simulateFileGeneration() {
-            let progress = 0;
-            const interval = setInterval(() => {
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    showPopup();
+        function generarArchivo() {
+            // Mostrar barra de progreso
+            document.getElementById('progressContainer').style.display = 'block';
+            let progressBar = document.getElementById('progressBar');
+
+            // Simulación del progreso (sustituye esto con tu lógica de generación real)
+            let progreso = 0;
+            let intervalo = setInterval(function() {
+                if (progreso >= 100) {
+                    clearInterval(intervalo);
+                    // Ocultar barra de progreso
+                    document.getElementById('progressContainer').style.display = 'none';
+                    // Mostrar pop-up de descarga
+                    document.getElementById('downloadPopup').style.display = 'block';
                 } else {
-                    progress += 10;
-                    document.getElementById("progress").style.width = progress + "%";
+                    progreso += 10;
+                    progressBar.style.width = progreso + '%';
+                    progressBar.innerText = progreso + '%';
                 }
-            }, 500); // Simulación del progreso cada 500 ms
-        }
+            }, 500); // Simula el progreso cada 500ms
 
-        function showPopup() {
-            const popup = document.getElementById("popup");
-            const downloadLink = document.getElementById("download-link");
-            downloadLink.href = "/ruta-al-archivo"; // Cambia esto por la ruta real de tu archivo
-            popup.style.display = "block";
+            // Una vez finalizado, habilita el botón de descarga
+            document.getElementById('downloadButton').onclick = function() {
+                // Lógica de descarga del archivo
+                window.location.href = 'ruta/del/archivo.tmc'; // Cambia por la ruta real del archivo
+            };
         }
-
-        // Simulamos la generación del archivo al cargar la página
-        window.onload = simulateFileGeneration;
     </script>
-
 </body>
 </html>
