@@ -1,111 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMPTE LTC Generator</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <title>Generación de archivo</title>
+    <style>
+        body {
+            background-color: #2E2E2E; /* Gris oscuro */
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #4F4F4F; /* Fondo de la barra de progreso */
+            border-radius: 25px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            height: 30px;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #FF5001; /* Color personalizado de la barra */
+            transition: width 0.4s;
+        }
+
+        .popup {
+            display: none;
+            background-color: #FF5001; /* Color personalizado del popup */
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+
     <div class="container">
-        <h3>El-Tee-See Two: SMPTE LTC .wav file generator</h3>
-        <form id="ltcForm">
-            <div class="section">
-                <label>Frame Rate</label>
-                <p>
-                    <label>
-                        <input name="frameRate" type="radio" value="24" />
-                        <span>24</span>
-                    </label>
-                    <label>
-                        <input name="frameRate" type="radio" value="25" />
-                        <span>25</span>
-                    </label>
-                    <label>
-                        <input name="frameRate" type="radio" value="30" checked/>
-                        <span>30</span>
-                    </label>
-                </p>
-            </div>
-
-            <div class="section">
-                <label>Sample Rate</label>
-                <p>
-                    <label>
-                        <input name="sampleRate" type="radio" value="44100" checked/>
-                        <span>44100</span>
-                    </label>
-                    <label>
-                        <input name="sampleRate" type="radio" value="48000" />
-                        <span>48000</span>
-                    </label>
-                </p>
-            </div>
-
-            <div class="section">
-                <label>Bit Depth</label>
-                <p>
-                    <label>
-                        <input name="bitDepth" type="radio" value="8" />
-                        <span>8 bit</span>
-                    </label>
-                    <label>
-                        <input name="bitDepth" type="radio" value="16" />
-                        <span>16 bit</span>
-                    </label>
-                    <label>
-                        <input name="bitDepth" type="radio" value="24" checked/>
-                        <span>24 bit</span>
-                    </label>
-                </p>
-            </div>
-
-            <div class="section">
-                <label>Duration (minutes)</label>
-                <p class="range-field">
-                    <input type="range" name="duration" min="1" max="120" value="10" id="durationRange"/>
-                    <span id="durationDisplay">10</span> minutes
-                </p>
-            </div>
-
-            <div class="section">
-                <label>Start Time (HH:MM:SS:FF)</label>
-                <input type="text" name="startTime" value="00:01:00:00" />
-            </div>
-
-            <button class="btn waves-effect waves-light" type="submit" name="action">Generate LTC</button>
-        </form>
+        <h1>Generando el archivo...</h1>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div id="popup" class="popup">
+            ¡Archivo generado! <a href="#" id="download-link">DESCARGAR</a>
+        </div>
     </div>
 
     <script>
-        document.getElementById('durationRange').addEventListener('input', function() {
-            document.getElementById('durationDisplay').textContent = this.value;
-        });
+        function simulateFileGeneration() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    showPopup();
+                } else {
+                    progress += 10;
+                    document.getElementById("progress").style.width = progress + "%";
+                }
+            }, 500); // Simulación del progreso cada 500 ms
+        }
 
-        document.getElementById('ltcForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
+        function showPopup() {
+            const popup = document.getElementById("popup");
+            const downloadLink = document.getElementById("download-link");
+            downloadLink.href = "/ruta-al-archivo"; // Cambia esto por la ruta real de tu archivo
+            popup.style.display = "block";
+        }
 
-            fetch('/generate_ltc', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            })
-            .then(response => response.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = 'ltc_generated.wav';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-            });
-        });
+        // Simulamos la generación del archivo al cargar la página
+        window.onload = simulateFileGeneration;
     </script>
+
 </body>
 </html>
