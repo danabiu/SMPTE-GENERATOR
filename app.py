@@ -1,6 +1,6 @@
 import os
 import io
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 import logging
 from tools import cint, ltc_encode
 from timecode import Timecode
@@ -99,6 +99,9 @@ def make_ltc_wave(fps, start, duration, rate, bits):
     wav_data = write_wave_file(data.buffer, rate=rate, bits=bits)
     return wav_data
 
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/generate_ltc', methods=['POST'])
 def generate_ltc():
@@ -128,7 +131,6 @@ def generate_ltc():
     except Exception as e:
         logging.error(f"Error during LTC generation: {str(e)}")
         return jsonify({'error': 'Failed to generate LTC. Please check input parameters.'}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

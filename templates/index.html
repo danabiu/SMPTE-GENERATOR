@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador LTC</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #FF5001;
+        }
+
+        form {
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 300px;
+        }
+
+        label {
+            color: #FF5001;
+            font-weight: bold;
+        }
+
+        input, button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        input {
+            background-color: #444;
+            color: #fff;
+        }
+
+        button {
+            background-color: #FF5001;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #ff7733;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generador LTC</h1>
+    <form id="ltcForm">
+        <label for="frameRate">Frame Rate:</label>
+        <input type="number" id="frameRate" name="frameRate" value="30" required>
+
+        <label for="sampleRate">Sample Rate:</label>
+        <input type="number" id="sampleRate" name="sampleRate" value="44100" required>
+
+        <label for="bitDepth">Bit Depth:</label>
+        <input type="number" id="bitDepth" name="bitDepth" value="16" required>
+
+        <label for="duration">Duración (minutos):</label>
+        <input type="number" id="duration" name="duration" value="1" required>
+
+        <label for="startTime">Start Time (HH:MM:SS:FF):</label>
+        <input type="text" id="startTime" name="startTime" value="00:01:00:00" required>
+
+        <button type="submit">Generar LTC</button>
+    </form>
+
+    <script>
+        document.getElementById('ltcForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            
+            const formData = {
+                frameRate: document.getElementById('frameRate').value,
+                sampleRate: document.getElementById('sampleRate').value,
+                bitDepth: document.getElementById('bitDepth').value,
+                duration: document.getElementById('duration').value,
+                startTime: document.getElementById('startTime').value
+            };
+
+            const response = await fetch('/generate_ltc', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ltc_generated.wav';
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                alert('Error al generar LTC. Verifica los parámetros.');
+            }
+        });
+    </script>
+</body>
+</html>
