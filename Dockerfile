@@ -10,8 +10,8 @@ COPY . /app
 # Instalar dependencias
 RUN pip install --no-cache-dir flask timecode
 
-# Crear carpeta temporal
-RUN mkdir temp
+# Crear carpeta temporal si no existe
+RUN [ ! -d "temp" ] && mkdir temp || echo "temp directory already exists"
 
 # Exponer el puerto que usa Flask
 EXPOSE 5000
