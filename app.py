@@ -233,8 +233,8 @@ def index():
             <option value="16">16-bit</option>
         </select>
 
-        <label for="duration">Duración (minutos, máx 120):</label>
-        <input type="number" id="duration" min="1" max="120" value="1">
+        <label for="duration">Duración (minutos, máx 30):</label>
+        <input type="number" id="duration" min="1" max="30" value="1">
 
         <label for="startTime">Start Timecode (HH:MM:SS:FF):</label>
         <input type="text" id="startTime" value="00:00:00:00">
