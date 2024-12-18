@@ -52,7 +52,10 @@ def gen_wave_header(data, rate=48000, bits=8, channels=1):
 @click.option('--duration', '-d',   default=300.0, help='duration in seconds for the ltc, defaults to 300 (5 minutes)')
 @click.option('--rate', '-r',   default=48000, help='sample rate, defaults to 48000')
 @click.option('--bits', '-b',   default=16, help='bits per sample, defaults to 16')
-def make_ltc_wave(fps, start, duration, rate, bits):
+@click.option('--output', '-o', required=True, help='output file name with full path')
+
+
+def make_ltc_wave(fps, start, duration, rate, bits, output):
   fps = float(fps)
   duration = float(duration)
   fmt = 'pcm_u8'
@@ -142,6 +145,7 @@ def make_ltc_wave(fps, start, duration, rate, bits):
   # everything has been computed
   # prepare to write the wave file
   print()
+
 
   wave_file_name = 'ltc--{}--{}fps--{}--{}--{}secs.wav'.format(
       start.replace(':', '_'), fps, rate, fmt, duration)
