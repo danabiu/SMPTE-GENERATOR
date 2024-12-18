@@ -4,14 +4,14 @@ FROM python:3.9-slim
 # Configuración de la carpeta de trabajo
 WORKDIR /app
 
-# Copiar los archivos necesarios
+# Copiar los archivos necesarios, ignorando temp
 COPY . /app
 
 # Instalar dependencias
 RUN pip install --no-cache-dir flask timecode
 
-# Crear carpeta temporal si no existe
-RUN [ ! -d "temp" ] && mkdir temp || echo "temp directory already exists"
+# Crear carpeta temporal
+RUN mkdir temp
 
 # Exponer el puerto que usa Flask
 EXPOSE 5000
